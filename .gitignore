@@ -6,8 +6,4 @@
 *.ipynb
 
 *.pyc
-view_soil_samples.ipynb
 
-plotfunctions.pyc
-
-*.pyc
