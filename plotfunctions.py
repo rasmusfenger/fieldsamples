@@ -1,4 +1,5 @@
 import os
+import sys
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,12 +29,12 @@ from mpl_toolkits.axes_grid.anchored_artists import AnchoredText
 # 3 = Roots < 1mm (dry)
 # 4 = Roots > 1mm (dry)
 # 5 = Horse tail (dry)
-# 6 = Total biomass
-# 7 = NDVI handheld
-# 8 = LAI
-# 9 = Soil weight
-# 10 = Remaining soil after sifting
-# 11 = waste by sifting
+# 6 = Soil weight
+# 7 = Remaining soil after sifting
+# 8 = waste by sifting
+# 20 = Total biomass
+# 21 = NDVI handheld
+# 22 = LAI
 
 # plot modes:
 # 1 = all plots
@@ -92,22 +93,72 @@ class Variable(object):
                 self.column = int(row[3])
                 self.xname = row[4]
                 self.yname = row[5]
-                self.isdepth = bool(row[6])
+                self.isdepth = row[6]
                 self.log = False
                 if str(variable - int(variable)) == '0.1':
                     self.log = True
                     self.xname += '- log'
 
 def check_input(inFile, site, stype, variable_1, variable_2, plotmode):
+    def print_error(errList):
+        # Error messages
+        errMes = {1: 'inFile does not exist',
+                  2: 'sites not valid',
+                  3: 'site type not valid',
+                  4: 'plotmode not valid',
+                  5: 'variable_1 not valid',
+                  6: 'variable_2 not valid',
+                  7: 'selected variable_1 cannot be combined with plotmode 1 or 2',
+                  8: 'selected variable_1 or variable_2 cannot be combined with plotmode 4'}
+        print 'Error - Wrong input!'
+        for err in errList:
+            print errMes[err]
+        sys.exit(0)
+
+    # Valid parameters
     siteValid = [1,2,3,4,5,6,7]
     stypeValid = [1,2,3]
-    variable_1Valid = []
-    variable_2Valid = []
-    plotmodeValid = []
+    variableValid = [1,2,3,4,5,6,7,8,20,21,22]
+    plotmodeValid = ['1', '2', '2.1', '2.2', '3', '4', '4.1', '4.2', '4.3']
     errList = []
+    # First check input parameters
     if not os.path.isfile(inFile):
-        errList.append('inFile does not exist')
+        errList.append(1)
+    if not site in siteValid:
+        errList.append(2)
+    if not stype in stypeValid:
+        errList.append(3)
+    if not variable_1 in variableValid:
+        errList.append(5)
+    if not str(plotmode) in plotmodeValid:
+        errList.append(4)
+    if errList:
+        print_error(errList)
+    # Then check combination of input parameters
+    else:
+        var1 = Variable(variable_1)
+        if int(plotmode) == 1 or int(plotmode) == 2:
+            #variable_1 has to have depth observations
+            if var1.isdepth == 'no':
+                errList.append(7)
+        elif int(plotmode) == 3:
+            if not variable_2 in variableValid:
+                errList.append(6)
+        elif int(plotmode) == 4:
+            if not variable_2 in variableValid:
+                errList.append(6)
+            else:
+                # variable_1 and variable_2 cannot have depth observations
+                var2 = Variable(variable_2)
+                if var1.isdepth == 'yes' or var2.isdepth == 'yes':
+                    errList.append(8)
+        if errList:
+            print_error(errList)
 
+#def test(inFile):
+#    siteList = [1,2,3,4,5,6]
+#    variableList = [1,2,3,4,5,6,7,8,20,21,22]
+#    plotmodeList = [1, 2, 2.1, 2.2, 3, 4, 4.1, 4.2, 4.3]
 
 def data_transform(observation, variable):
     # Use this function to modify the data.
@@ -336,6 +387,8 @@ def plot_scatter(dataListX, dataListY, title, xlabel, ylabel, plotmode, reg):
     layout(title, xlabel, ylabel, False, text)
 
 def plot(inFile, site, stype, variable_1, variable_2, plotmode, reg=False):
+    # check input parameters
+    check_input(inFile, site, stype, variable_1, variable_2, plotmode)
     # prepare list of sites
     siteList = []
     if site == 6:
