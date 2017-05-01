@@ -118,7 +118,7 @@ def check_input(inFile, site, stype, variable_1, variable_2, plotmode):
     # Valid parameters
     siteValid = [1,2,3,4,5,6,7]
     stypeValid = [1,2,3]
-    variableValid = [1,2,3,4,5,6,7,8,20,21,22]
+    variableValid = [1,2,3,4,5,6,7,8,20,21,22,30,40,41,42,43]
     plotmodeValid = ['1', '2', '2.1', '2.2', '3', '4', '4.1', '4.2', '4.3']
     errList = []
     # First check input parameters
@@ -180,7 +180,7 @@ def extract_from_excel(inFile, var, sites, sitetypes, plotmode=0):
 
     dataList = []
     # read excel with pandas
-    df = pd.read_excel(inFile, var.sheet, header=2, parse_cols='A:AH', na_values='none')
+    df = pd.read_excel(inFile, var.sheet, header=2, parse_cols='A:AZ', na_values='none')
     # group by excel column site
     for site in sites:
         sitegroup = df.groupby(['Site']).get_group(site)

@@ -10,3 +10,8 @@ Variable,Title,Sheet,Column,xname,yname,depth
 20,Total biomass,Biomass,14,dry weight (g),none,no
 21,NDVI handheld,Biomass,19,ndvi,none,no
 22,LAI,Veg analysis,13,LAI,none,no
+30,Phosphor,Olsen P,15,phosphor (mg/l),depth (cm),yes
+40,NO3,Wet analysis,7,NO3 (ug/L),depth (cm),yes
+41,NH4,Wet analysis,8,NH4 (ug/L),depth (cm),yes
+42,TOC,Wet analysis,9,TOC (mg/L),depth (cm),yes
+43,TN,Wet analysis,10,TN (??),depth (cm),yes
