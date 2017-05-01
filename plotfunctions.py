@@ -118,7 +118,7 @@ def check_input(inFile, site, stype, variable_1, variable_2, plotmode):
     # Valid parameters
     siteValid = [1,2,3,4,5,6,7]
     stypeValid = [1,2,3]
-    variableValid = [1,2,3,4,5,6,7,8,20,21,22,30,40,41,42,43]
+    variableValid = [1,2,3,4,5,6,7,8,10,11,12,13,14,15,20,21,22,30,31,32,40,41,42,43]
     plotmodeValid = ['1', '2', '2.1', '2.2', '3', '4', '4.1', '4.2', '4.3']
     errList = []
     # First check input parameters
