@@ -14,9 +14,15 @@ Variable,Title,Sheet,Column,xname,yname,depth
 21,NDVI handheld,Biomass,19,ndvi,none,no
 22,LAI,Veg analysis,13,LAI,none,no
 30,Phosphor,Olsen P,15,P (mg/l),depth (cm),yes
-31,Phosphor,Olsen P,19,P (mg/kg dry soil),depth (cm),yes
-32,Phosphor-blank corrected,Olsen P,24,P (mg/kg dry soil),depth (cm),yes
+31,Phosphor,Olsen P,19,P (mg/kg DW),depth (cm),yes
+32,Phosphor-blank corrected,Olsen P,24,P (mg/kg DW),depth (cm),yes
 40,NO3,Wet analysis,7,NO3 (ug/L),depth (cm),yes
 41,NH4,Wet analysis,8,NH4 (ug/L),depth (cm),yes
 42,TOC,Wet analysis,9,TOC (mg/L),depth (cm),yes
-43,TN,Wet analysis,10,TN (??),depth (cm),yes
+43,TN,Wet analysis,10,TN (mg/L),depth (cm),yes
+44,NO3,Wet analysis,11,NO3 (ug/g DW),depth (cm),yes
+45,NH4,Wet analysis,12,NH4 (ug/g DW),depth (cm),yes
+46,TN,Wet analysis,13,TN (mg/g DW),depth (cm),yes
+47,DON,Wet analysis,14,DON (ug/g DW,depth (cm),yes
+48,TOC,Wet analysis,15,TOC (mg/g DW),depth (cm),yes
+
