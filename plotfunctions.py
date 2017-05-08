@@ -6,7 +6,7 @@ import numpy as np
 from scipy import stats
 from mpl_toolkits.axes_grid.anchored_artists import AnchoredText
 
-########################################################
+########################################################################################################################
 # How to use:
 ##############
 # Sites:
@@ -23,18 +23,34 @@ from mpl_toolkits.axes_grid.anchored_artists import AnchoredText
 # Cultural = 2
 # both = 3
 #
-# Variables(check csv file with variables in root):
+# Variables:
+# NB: to use log(variable) add 0.1 to variable number
 # 1 = soil water content
 # 2 = pH
-# 3 = Roots < 1mm (dry)
-# 4 = Roots > 1mm (dry)
-# 5 = Horse tail (dry)
 # 6 = Soil weight
 # 7 = Remaining soil after sifting
 # 8 = waste by sifting
+# 10 = Roots < 1mm (dry)
+# 11 = Roots > 1mm (dry)
+# 12 = Horse tail (dry)
+# 13 = Roots < 1mm (dry) /kg dry soil
+# 14 = Roots > 1mm (dry) /kg dry soil
+# 15 = Horse tail (dry) /kg dry soil
 # 20 = Total biomass
 # 21 = NDVI handheld
 # 22 = LAI
+# 30 = Phosphor concentration in analysis
+# 31 = Phosphor/kg dry soil
+# 32 = Phosphor/kg dry soil - blank corrected
+# 40 = NO3 concentration in analysis
+# 41 = NH4 concentration in analysis
+# 42 = TOC concentration in analysis
+# 43 = TN concentration in analysis
+# 44 = NO3 in dry soil, blank corrected
+# 45 = NH4 in dry soil, blank corrected
+# 46 = TN in dry soil, blank corrected (Total nitrogen)
+# 47 = DON in dry soil, blank corrected (Dissolved organic nitrogen, eg. aminosyrer)
+# 48 = TOC in dry soil, blank corrected (Total organic carbon)
 
 # plot modes:
 # 1 = all plots
@@ -70,7 +86,7 @@ if sites == 7:
 else:
     plot(inFile, sites, types, variable_1, variable_2, plotmode, reg)
 '''
-########################################################
+########################################################################################################################
 
 class Data(object):
     def __init__(self, site, sitetype, plot, observation, depth=None):
@@ -83,7 +99,7 @@ class Data(object):
 class Variable(object):
     # Defines a variable class based on info in csv file in root.
     def __init__(self, variable):
-        inFile = '/Users/rasmus/PycharmProjects/fieldsamples/variable_data.csv'
+        inFile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'variable_data.csv')
         df = np.loadtxt(inFile, delimiter=',', skiprows=1, dtype=str)
         for row in df:
             if int(row[0]) == int(variable):
@@ -118,7 +134,7 @@ def check_input(inFile, site, stype, variable_1, variable_2, plotmode):
     # Valid parameters
     siteValid = [1,2,3,4,5,6,7]
     stypeValid = [1,2,3]
-    variableValid = [1,2,3,4,5,6,7,8,10,11,12,13,14,15,20,21,22,30,31,32,40,41,42,43]
+    variableValid = [1,2,3,4,5,6,7,8,10,11,12,13,14,15,20,21,22,30,31,32,40,41,42,43,44,45,46,47,48]
     plotmodeValid = ['1', '2', '2.1', '2.2', '3', '4', '4.1', '4.2', '4.3']
     errList = []
     # First check input parameters
@@ -128,7 +144,7 @@ def check_input(inFile, site, stype, variable_1, variable_2, plotmode):
         errList.append(2)
     if not stype in stypeValid:
         errList.append(3)
-    if not variable_1 in variableValid:
+    if not int(variable_1) in variableValid:
         errList.append(5)
     if not str(plotmode) in plotmodeValid:
         errList.append(4)
@@ -142,10 +158,10 @@ def check_input(inFile, site, stype, variable_1, variable_2, plotmode):
             if var1.isdepth == 'no':
                 errList.append(7)
         elif int(plotmode) == 3:
-            if not variable_2 in variableValid:
+            if not int(variable_2) in variableValid:
                 errList.append(6)
         elif int(plotmode) == 4:
-            if not variable_2 in variableValid:
+            if not int(variable_2) in variableValid:
                 errList.append(6)
             else:
                 # variable_1 and variable_2 cannot have depth observations
@@ -225,6 +241,7 @@ def extract_from_excel(inFile, var, sites, sitetypes, plotmode=0):
             meanList = []
             stdList = []
             sizeList = []
+            varList = []
             depthList = []
             for depth in [5, 10, 20, 30]:
                 # Zeros are removed.
@@ -238,12 +255,15 @@ def extract_from_excel(inFile, var, sites, sitetypes, plotmode=0):
                         meanList.append(a[~np.isnan(a)].mean())
                         stdList.append(a[~np.isnan(a)].std())
                         sizeList.append(a[~np.isnan(a)].size)
+                        varList.append(a[~np.isnan(a)].var(ddof=1))
                         depthList.append(depth)
-            outList.append(Data(data.site, data.sitetype, data.plot, {'mean': meanList, 'std': stdList, 'n': sizeList},
-                                depthList))
+            outList.append(Data(data.site, data.sitetype, data.plot, {'mean': meanList, 'std': stdList, 'n': sizeList,
+                                                                      'var': varList}, depthList))
         dataList = outList
     return dataList
 
+########################################################################################################################
+# plotting
 def layout(title, xlabel, ylabel, invertY=False, text=None):
     # define plot layout
     plt.gca().set_title(title)
@@ -416,6 +436,68 @@ def plot(inFile, site, stype, variable_1, variable_2, plotmode, reg=False):
         dataListY = extract_from_excel(inFile, var2, siteList, stypeList, plotmode)
         plot_scatter(dataListX, dataListY, title, var1.xname, var2.xname, plotmode, reg)
 
+########################################################################################################################
+# t-tests
+def ttest(dataList, type):
+    from scipy.stats import ttest_ind_from_stats
+    # Get the descriptive statistics of a and b.
+    amean = np.asarray(dataList[0].observation['mean'])
+    avar = np.asarray(dataList[0].observation['var'])
+    an = np.asarray(dataList[0].observation['n'])
+
+    bmean = np.asarray(dataList[1].observation['mean'])
+    bvar = np.asarray(dataList[1].observation['var'])
+    bn = np.asarray(dataList[1].observation['n'])
+
+    if type == 'stype':
+        print "\n%s" % (dataList[0].site)
+        print "%s vs %s" % (dataList[0].sitetype, dataList[1].sitetype)
+    elif type == 'site':
+        print "\n%s" % (dataList[0].sitetype)
+        print "%s vs %s" % (dataList[0].site, dataList[1].site)
+    # use indices to ensure data form right depths is used
+    ai = 0
+    for ad in dataList[0].depth:
+        bi = 0
+        for bd in dataList[1].depth:
+            if ad == bd:
+                # Use scipy.stats.ttest_ind_from_stats.
+                t, p = ttest_ind_from_stats(amean[ai], np.sqrt(avar[ai]), an[ai], bmean[bi], np.sqrt(bvar[bi]), bn[bi],
+                                            equal_var=False)
+                if p <= 0.05:
+                    s = 'significant'
+                elif p > 0.05:
+                    s = 'not significant'
+                else:
+                    s = 'nan'
+                print("%gcm: \tt = %.5f  \tp = %.5f \t%s" % (ad, t, p, s))
+            bi = bi + 1
+        ai = ai + 1
+
+def ttest_stype(inFile, site, variable):
+    # check input parameters
+    # To be done
+
+    # get data
+    var = Variable(variable)
+    siteList = [siteDict[site]]
+    stypeList = [typeDict[1], typeDict[2]]
+    dataList = extract_from_excel(inFile, var, siteList, stypeList, 2)
+    ttest(dataList, 'stype')
+
+def ttest_site(inFile, site1, site2, stype, variable):
+    # check input parameters
+    # To be done
+
+    # get data
+    var = Variable(variable)
+    siteList = [siteDict[site1], siteDict[site2]]
+    stypeList = [typeDict[stype]]
+    dataList = extract_from_excel(inFile, var, siteList, stypeList, 2)
+    ttest(dataList, 'site')
+
+########################################################################################################################
+# dictionaries
 # dictionary with layout parameters
 cDict = {'Sandnes': 'red',
          'Iffiartafik': 'green',
@@ -446,4 +528,5 @@ typeDict = {1: 'Natural',
             2: 'Cultural',
             3: 'both'}
 
-########################################################
+########################################################################################################################
+########################################################################################################################
