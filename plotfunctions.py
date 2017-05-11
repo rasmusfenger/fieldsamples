@@ -115,7 +115,7 @@ class Variable(object):
                     self.log = True
                     self.xname += '- log'
 
-def check_input(inFile, site, stype, variable_1, variable_2, plotmode):
+def check_input(inFile, site, stype, variable_1, variable_2, plotmode, savefig):
     def print_error(errList):
         # Error messages
         errMes = {1: 'inFile does not exist',
@@ -125,7 +125,8 @@ def check_input(inFile, site, stype, variable_1, variable_2, plotmode):
                   5: 'variable_1 not valid',
                   6: 'variable_2 not valid',
                   7: 'selected variable_1 cannot be combined with plotmode 1 or 2',
-                  8: 'selected variable_1 or variable_2 cannot be combined with plotmode 4'}
+                  8: 'selected variable_1 or variable_2 cannot be combined with plotmode 4',
+                  9: 'path for saving figure does not exist'}
         print 'Error - Wrong input!'
         for err in errList:
             print errMes[err]
@@ -134,7 +135,7 @@ def check_input(inFile, site, stype, variable_1, variable_2, plotmode):
     # Valid parameters
     siteValid = [1,2,3,4,5,6,7]
     stypeValid = [1,2,3]
-    variableValid = [1,2,3,4,5,6,7,8,10,11,12,13,14,15,20,21,22,30,31,32,40,41,42,43,44,45,46,47,48]
+    variableValid = [1,2,3,4,5,6,7,8,10,11,12,13,14,15,20,21,22,30,31,32,40,41,42,43,44,45,46,47,48,49]
     plotmodeValid = ['1', '2', '2.1', '2.2', '3', '4', '4.1', '4.2', '4.3']
     errList = []
     # First check input parameters
@@ -148,6 +149,9 @@ def check_input(inFile, site, stype, variable_1, variable_2, plotmode):
         errList.append(5)
     if not str(plotmode) in plotmodeValid:
         errList.append(4)
+    if savefig:
+        if not os.path.isdir(savefig):
+            errList.append(9)
     if errList:
         print_error(errList)
     # Then check combination of input parameters
@@ -262,15 +266,34 @@ def extract_from_excel(inFile, var, sites, sitetypes, plotmode=0):
         dataList = outList
     return dataList
 
+def getdata(inFile, variable, sites, sitetypes, plotmode=0):
+    # prepare list of sites and site types
+    siteList = []
+    if sites == 6:
+        for num in range(1, 6):
+            siteList.append(siteDict[num])
+    else:
+        siteList.append(siteDict[sites])
+
+    if typeDict[sitetypes] == 'both':
+        stypeList = [typeDict[1], typeDict[2]]
+    else:
+        stypeList = [typeDict[sitetypes]]
+    var = Variable(variable)
+
+    # extract data
+    dataList = extract_from_excel(inFile, var, siteList, stypeList, plotmode)
+    return dataList
+
 ########################################################################################################################
 # plotting
-def layout(title, xlabel, ylabel, invertY=False, text=None):
+def layout(title, xlabel, ylabel, plotmode, invertY=False, text=None, savefig=None):
     # define plot layout
     plt.gca().set_title(title)
     plt.gca().set_xlabel(xlabel)
     plt.gca().set_ylabel(ylabel)
     # anchor legend box
-    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     if invertY:
         # invert y-axis (for profile plots)
         plt.gca().invert_yaxis()
@@ -279,9 +302,16 @@ def layout(title, xlabel, ylabel, invertY=False, text=None):
         # placing text. Used for r2 value when plotting regression line
         at = AnchoredText(text, prop=dict(size=10), frameon=False, loc=2,)
         plt.gca().add_artist(at)
+    if savefig:
+        dir = os.path.join(savefig, 'plotmode_' + str(plotmode))
+        if not os.path.isdir(dir):
+            os.mkdir(dir)
+        fname = os.path.join(dir, title + '.png')
+        plt.savefig(fname, dpi=150, bbox_extra_artists = (lgd,), bbox_inches = 'tight')
+        # if dpi should be the same as plt.show then use: dpi=plt.gcf().dpi
     plt.show()
 
-def plot_profile(dataList, title, xlabel, ylabel, plotmode):
+def plot_profile(dataList, title, xlabel, ylabel, plotmode, savefig):
     if plotmode == 1:
         if len(dataList) > 48:
             sites = 'all'
@@ -326,9 +356,10 @@ def plot_profile(dataList, title, xlabel, ylabel, plotmode):
                 # add shaded area based on std
                 plt.plot(x, y, ls=cDict[data.sitetype], c=cDict[data.site], label=labelname, marker='o')
                 plt.fill_betweenx(y, x - std, x + std, color=cDict[data.site], alpha=0.1)
-    layout(title, xlabel, ylabel, invertY=True)
+    layout(title, xlabel, ylabel, plotmode, invertY=True, savefig=savefig)
 
-def plot_scatter(dataListX, dataListY, title, xlabel, ylabel, plotmode, reg):
+
+def plot_scatter(dataListX, dataListY, title, xlabel, ylabel, plotmode, reg, savefig):
     # prepare lists for saving data for calculating regression line
     fitListX = []
     fitListY = []
@@ -404,11 +435,11 @@ def plot_scatter(dataListX, dataListY, title, xlabel, ylabel, plotmode, reg):
         text = 'r2 = '+'{0:.2f}'.format(r_value*r_value)
     else:
         text = None
-    layout(title, xlabel, ylabel, False, text)
+    layout(title, xlabel, ylabel, plotmode, invertY=False, text=text, savefig=savefig)
 
-def plot(inFile, site, stype, variable_1, variable_2, plotmode, reg=False):
+def plot(inFile, site, stype, variable_1, variable_2, plotmode, reg=False, savefig=None):
     # check input parameters
-    check_input(inFile, site, stype, variable_1, variable_2, plotmode)
+    check_input(inFile, site, stype, variable_1, variable_2, plotmode, savefig)
     # prepare list of sites
     siteList = []
     if site == 6:
@@ -427,18 +458,83 @@ def plot(inFile, site, stype, variable_1, variable_2, plotmode, reg=False):
     title = var1.title + ' ' + siteDict[site]
     dataListX = extract_from_excel(inFile, var1, siteList, stypeList, plotmode)
     if int(plotmode) <= 2:
-        plot_profile(dataListX, title, var1.xname, var1.yname, plotmode)
+        plot_profile(dataListX, title, var1.xname, var1.yname, plotmode, savefig)
 
     # Scatter plots
     elif int(plotmode) >= 3:
         var2 = Variable(variable_2)
         title = var1.title  + '(x) vs ' + var2.title + '(y)'
         dataListY = extract_from_excel(inFile, var2, siteList, stypeList, plotmode)
-        plot_scatter(dataListX, dataListY, title, var1.xname, var2.xname, plotmode, reg)
+        plot_scatter(dataListX, dataListY, title, var1.xname, var2.xname, plotmode, reg, savefig)
+
+# saving plots to pdf
+def plot2pdf(inFileList, outFilename, title):
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.units import inch, cm
+    from reportlab.lib.pagesizes import letter, landscape
+
+    if len(inFileList) > 0:
+        c = canvas.Canvas(outFilename, pagesize=landscape(letter))
+        figsizex = 13
+        figsizey = 6.5
+        figlocList = [[0.5, 13.5], [14.5, 13.5], [0.5, 7], [14.5, 7], [0.5, 0.5], [14.5, 0.5]]
+        for num in range(0, len(inFileList)):
+            c.drawImage(inFileList[num], figlocList[num][0] * cm, figlocList[num][1] * cm, figsizex * cm, figsizey * cm)
+        c.setFont('Helvetica', 16)
+        c.drawString(0.5*cm, 20.5*cm, title)
+        c.showPage()
+        c.save()
+        print 'PDF-file created: ' + outFilename
+    else:
+        print 'Could not create PDF-file - figures not available'
+
+def plot2pdf_allsites(variable, plotmode, inFolder, outFolder):
+    var = Variable(variable)
+    sites = 6
+    outFilename = os.path.join(outFolder, var.title + ' ' + siteDict[sites] + '.pdf')
+    inFileList = []
+    for num in range(1,7):
+        inFile = os.path.join(inFolder, 'plotmode_' + str(plotmode), var.title + ' ' + siteDict[num] + '.png')
+        if os.path.isfile(inFile):
+            inFileList.append(inFile)
+        else:
+            print 'figure does not exist: ' + inFile
+    title = var.title + ' ' + siteDict[num]
+    plot2pdf(inFileList, outFilename, title)
+
+def plot2pdf_onesite(site, variableList, plotmode, inFolder, outFolder, plotname):
+    inFileList = []
+    outFilename = os.path.join(outFolder, plotname + ' ' + siteDict[site] + '.pdf')
+    for variable in variableList:
+        var = Variable(variable)
+        inFile = os.path.join(inFolder, 'plotmode_' + str(plotmode), var.title + ' ' + siteDict[site] + '.png')
+        if os.path.isfile(inFile):
+            inFileList.append(inFile)
+        else:
+            print 'figure does not exist: ' + inFile
+    title = plotname + ' ' + siteDict[site]
+    plot2pdf(inFileList, outFilename, title)
 
 ########################################################################################################################
 # t-tests
-def ttest(dataList, type):
+def writetxt(outFile, mode, type, dataList, statList, var):
+    with open(outFile, mode) as txt:
+        if type == 'cultural_vs_natural':
+            if mode == 'w':
+                txt.write(var.title + 't-test')
+            txt.write("\n\n%s" % (dataList[0].site))
+            txt.write("\n%s vs %s" % (dataList[0].sitetype, dataList[1].sitetype))
+        elif type == 'site_vs_site':
+            if mode == 'w':
+                txt.write(var.title + 't-test')
+            txt.write("\n\n%s" % (dataList[0].sitetype))
+            txt.write("\n%s vs %s" % (dataList[0].site, dataList[1].site))
+        for stat in statList:
+            txt.write("\n%gcm: \tt = %.5f  \tp = %.5f \t%s" % (stat[0], stat[1], stat[2], stat[3]))
+    if mode == 'w':
+        print 'Text-file created: ' + outFile
+
+def ttest(dataList, type, var, savetxt=None, printtxt=False):
     from scipy.stats import ttest_ind_from_stats
     # Get the descriptive statistics of a and b.
     amean = np.asarray(dataList[0].observation['mean'])
@@ -449,12 +545,7 @@ def ttest(dataList, type):
     bvar = np.asarray(dataList[1].observation['var'])
     bn = np.asarray(dataList[1].observation['n'])
 
-    if type == 'stype':
-        print "\n%s" % (dataList[0].site)
-        print "%s vs %s" % (dataList[0].sitetype, dataList[1].sitetype)
-    elif type == 'site':
-        print "\n%s" % (dataList[0].sitetype)
-        print "%s vs %s" % (dataList[0].site, dataList[1].site)
+    statList = []
     # use indices to ensure data form right depths is used
     ai = 0
     for ad in dataList[0].depth:
@@ -470,11 +561,30 @@ def ttest(dataList, type):
                     s = 'not significant'
                 else:
                     s = 'nan'
-                print("%gcm: \tt = %.5f  \tp = %.5f \t%s" % (ad, t, p, s))
+                statList.append([ad,t,p,s])
             bi = bi + 1
         ai = ai + 1
+    if printtxt:
+        if type == 'cultural_vs_natural':
+            print "\n%s" % (dataList[0].site)
+            print "%s vs %s" % (dataList[0].sitetype, dataList[1].sitetype)
+        elif type == 'site_vs_site':
+            print "\n%s" % (dataList[0].sitetype)
+            print "%s vs %s" % (dataList[0].site, dataList[1].site)
+        for stat in statList:
+            print("%gcm: \tt = %.5f  \tp = %.5f \t%s" % (stat[0], stat[1], stat[2], stat[3]))
+    if savetxt:
+        outFile = os.path.join(savetxt, var.title + '_t-test_' + type + '.txt')
+        if os.path.isfile(outFile):
+            with open(outFile, 'r') as txt:
+                if len(txt.readlines()) > 10000:
+                    writetxt(outFile, 'w', type, dataList, statList, var)
+                else:
+                    writetxt(outFile, 'a', type, dataList, statList, var)
+        else:
+            writetxt(outFile, 'w', type, dataList, statList, var)
 
-def ttest_stype(inFile, site, variable):
+def ttest_stype(inFile, site, variable, savetxt=None, printtxt=False):
     # check input parameters
     # To be done
 
@@ -483,9 +593,9 @@ def ttest_stype(inFile, site, variable):
     siteList = [siteDict[site]]
     stypeList = [typeDict[1], typeDict[2]]
     dataList = extract_from_excel(inFile, var, siteList, stypeList, 2)
-    ttest(dataList, 'stype')
+    ttest(dataList, 'cultural_vs_natural', var, savetxt, printtxt)
 
-def ttest_site(inFile, site1, site2, stype, variable):
+def ttest_site(inFile, site1, site2, stype, variable, savetxt=None, printtxt=False):
     # check input parameters
     # To be done
 
@@ -494,7 +604,7 @@ def ttest_site(inFile, site1, site2, stype, variable):
     siteList = [siteDict[site1], siteDict[site2]]
     stypeList = [typeDict[stype]]
     dataList = extract_from_excel(inFile, var, siteList, stypeList, 2)
-    ttest(dataList, 'site')
+    ttest(dataList, 'site_vs_site', var, savetxt, printtxt)
 
 ########################################################################################################################
 # dictionaries
@@ -521,7 +631,7 @@ siteDict = {1: 'Sandnes',
             3: 'Qoornoq',
             4: 'Ersaa',
             5: 'Kangeq',
-            6: 'all'}
+            6: 'all sites'}
 
 # dictionary with sitetype names
 typeDict = {1: 'Natural',
