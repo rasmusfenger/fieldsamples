@@ -11,7 +11,7 @@ import numpy as np
 
 # read template
 template = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Labsheet_template.xlsx')
-dfTemplate = pd.read_excel(template, 'template', header=0, parse_cols='A:A', na_values='none')
+dfTemplate = pd.read_excel(template, 'template1', header=0, parse_cols='A:A', na_values='none')
 aTemplate = dfTemplate.values
 
 # read data file

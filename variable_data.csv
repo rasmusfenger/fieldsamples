@@ -1,9 +1,9 @@
 Variable,Title,Sheet,Column,xname,yname,depth
-1,Water content,Soil samples,31,% water,depth (cm),yes
-2,pH,Soil samples,22,pH,depth (cm),yes
-6,Soil weight,Soil samples,8,weight (g),depth (cm),yes
-7,Remaining soil,Soil samples,18,weight (g),depth (cm),yes
-8,Waste,Soil samples,19,weight (g),depth (cm),yes
+1,Water content,Soil samples,32,% water,depth (cm),yes
+2,pH,Soil samples,23,pH,depth (cm),yes
+6,Soil weight,Soil samples,9,weight (g),depth (cm),yes
+7,Remaining soil,Soil samples,19,weight (g),depth (cm),yes
+8,Waste,Soil samples,20,weight (g),depth (cm),yes
 10,Roots < 1mm,Roots,10,dry weight (g),depth (cm),yes
 11,Roots > 1 mm,Roots,11,dry weight (g),depth (cm),yes
 12,Horse tail,Roots,12,dry weight (g),depth (cm),yes
@@ -13,9 +13,13 @@ Variable,Title,Sheet,Column,xname,yname,depth
 20,Total biomass,Biomass,14,dry weight (g),none,no
 21,NDVI handheld,Biomass,19,ndvi,none,no
 22,LAI,Veg analysis,13,LAI,none,no
-30,Phosphor-liquid,Olsen P,15,P (mg/l),depth (cm),yes
-31,Phosphor-DW soil,Olsen P,19,P (mg/kg DW),depth (cm),yes
-32,Phosphor-DW soil-corrected,Olsen P,24,P (mg/kg DW),depth (cm),yes
+30,Phosphorus-liquid,Olsen P,15,P (mg/l),depth (cm),yes
+31,Phosphorus-DW soil,Olsen P,19,P (mg/kg DW),depth (cm),yes
+32,Phosphorus-DW soil-corrected,Olsen P,24,P (mg/kg DW),depth (cm),yes
+33,Phosphorus-vol-1,Olsen P,26,P (g P/m3),depth (cm),yes
+34,Phosphorus-vol-2,Olsen P,32,P (mg P/cm3),depth (cm),yes
+35,Phosphorus-vol-2,Olsen P,33,P (g P/m3),depth (cm),yes
+36,Phosphorus-di,Depth integrated,4,P (mg/35cm3 soil profile),none,no
 40,NO3-liquid,Wet analysis,7,NO3 (ug/L),depth (cm),yes
 41,NH4-liquid,Wet analysis,8,NH4 (ug/L),depth (cm),yes
 42,TOC-liquid,Wet analysis,9,TOC (mg/L),depth (cm),yes
@@ -26,3 +30,4 @@ Variable,Title,Sheet,Column,xname,yname,depth
 47,TN-DW soil,Wet analysis,24,TN (mg/g DW),depth (cm),yes
 48,DON-DW soil,Wet analysis,28,DON (ug/g DW,depth (cm),yes
 49,TOC-DW soil,Wet analysis,32,TOC (mg/g DW),depth (cm),yes
+
