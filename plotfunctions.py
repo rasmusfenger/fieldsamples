@@ -135,7 +135,7 @@ def check_input(inFile, site, stype, variable_1, variable_2, plotmode, savefig):
     # Valid parameters
     siteValid = [1,2,3,4,5,6,7]
     stypeValid = [1,2,3]
-    variableValid = [1,2,3,4,5,6,7,8,10,11,12,13,14,15,20,21,22,30,31,32,40,41,42,43,44,45,46,47,48,49]
+    variableValid = [1,2,3,4,5,6,7,8,10,11,12,13,14,15,20,21,22,30,31,32,33,34,35,36,40,41,42,43,44,45,46,47,48,49]
     plotmodeValid = ['1', '2', '2.1', '2.2', '3', '4', '4.1', '4.2', '4.3']
     errList = []
     # First check input parameters
@@ -517,7 +517,7 @@ def plot2pdf_onesite(site, variableList, plotmode, inFolder, outFolder, plotname
 
 ########################################################################################################################
 # t-tests
-def writetxt(outFile, mode, type, dataList, statList, var):
+def writetxt(outFile, mode, type, dataList, statList, var, pooldata=False):
     with open(outFile, mode) as txt:
         if type == 'cultural_vs_natural':
             if mode == 'w':
@@ -530,40 +530,58 @@ def writetxt(outFile, mode, type, dataList, statList, var):
             txt.write("\n\n%s" % (dataList[0].sitetype))
             txt.write("\n%s vs %s" % (dataList[0].site, dataList[1].site))
         for stat in statList:
-            txt.write("\n%gcm: \tt = %.5f  \tp = %.5f \t%s" % (stat[0], stat[1], stat[2], stat[3]))
+            if pooldata:
+                txt.write("\n%s: \tt = %.5f  \tp = %.5f \t%s" % (stat[0], stat[1], stat[2], stat[3]))
+            else:
+                txt.write("\n%gcm: \tt = %.5f  \tp = %.5f \t%s" % (stat[0], stat[1], stat[2], stat[3]))
     if mode == 'w':
         print 'Text-file created: ' + outFile
 
-def ttest(dataList, type, var, savetxt=None, printtxt=False):
-    from scipy.stats import ttest_ind_from_stats
-    # Get the descriptive statistics of a and b.
-    amean = np.asarray(dataList[0].observation['mean'])
-    avar = np.asarray(dataList[0].observation['var'])
-    an = np.asarray(dataList[0].observation['n'])
-
-    bmean = np.asarray(dataList[1].observation['mean'])
-    bvar = np.asarray(dataList[1].observation['var'])
-    bn = np.asarray(dataList[1].observation['n'])
-
+def ttest(dataList, type, var, pooldata=False, savetxt=None, printtxt=False):
+    from scipy.stats import ttest_ind, ttest_ind_from_stats
     statList = []
-    # use indices to ensure data form right depths is used
-    ai = 0
-    for ad in dataList[0].depth:
-        bi = 0
-        for bd in dataList[1].depth:
-            if ad == bd:
-                # Use scipy.stats.ttest_ind_from_stats.
-                t, p = ttest_ind_from_stats(amean[ai], np.sqrt(avar[ai]), an[ai], bmean[bi], np.sqrt(bvar[bi]), bn[bi],
-                                            equal_var=False)
-                if p <= 0.05:
-                    s = 'significant'
-                elif p > 0.05:
-                    s = 'not significant'
-                else:
-                    s = 'nan'
-                statList.append([ad,t,p,s])
-            bi = bi + 1
-        ai = ai + 1
+    if pooldata:
+        #a[~np.isnan(a)].mean()
+        #meanList.append(a[~np.isnan(a)].mean())
+        #t, p = ttest_ind(dataList[0].observation, dataList[1].observation, equal_var=False)
+        a = dataList[0].observation[~np.isnan(dataList[0].observation)]
+        b = dataList[1].observation[~np.isnan(dataList[1].observation)]
+        t, p = ttest_ind(a, b, equal_var=False)
+        if p <= 0.05:
+            s = 'significant'
+        elif p > 0.05:
+            s = 'not significant'
+        else:
+            s = 'nan'
+        statList.append(['pooled', t, p, s])
+    else:
+        # Get the descriptive statistics of a and b.
+        amean = np.asarray(dataList[0].observation['mean'])
+        avar = np.asarray(dataList[0].observation['var'])
+        an = np.asarray(dataList[0].observation['n'])
+
+        bmean = np.asarray(dataList[1].observation['mean'])
+        bvar = np.asarray(dataList[1].observation['var'])
+        bn = np.asarray(dataList[1].observation['n'])
+
+        # use indices to ensure data from right depths is used
+        ai = 0
+        for ad in dataList[0].depth:
+            bi = 0
+            for bd in dataList[1].depth:
+                if ad == bd:
+                    # Use scipy.stats.ttest_ind_from_stats.
+                    t, p = ttest_ind_from_stats(amean[ai], np.sqrt(avar[ai]), an[ai], bmean[bi], np.sqrt(bvar[bi]), bn[bi],
+                                                equal_var=False)
+                    if p <= 0.05:
+                        s = 'significant'
+                    elif p > 0.05:
+                        s = 'not significant'
+                    else:
+                        s = 'nan'
+                    statList.append([ad,t,p,s])
+                bi = bi + 1
+            ai = ai + 1
     if printtxt:
         if type == 'cultural_vs_natural':
             print "\n%s" % (dataList[0].site)
@@ -572,19 +590,25 @@ def ttest(dataList, type, var, savetxt=None, printtxt=False):
             print "\n%s" % (dataList[0].sitetype)
             print "%s vs %s" % (dataList[0].site, dataList[1].site)
         for stat in statList:
-            print("%gcm: \tt = %.5f  \tp = %.5f \t%s" % (stat[0], stat[1], stat[2], stat[3]))
+            if pooldata:
+                print("%s: \tt = %.5f  \tp = %.5f \t%s" % (stat[0], stat[1], stat[2], stat[3]))
+            else:
+                print("%gcm: \tt = %.5f  \tp = %.5f \t%s" % (stat[0], stat[1], stat[2], stat[3]))
     if savetxt:
-        outFile = os.path.join(savetxt, var.title + '_t-test_' + type + '.txt')
+        if pooldata:
+            outFile = os.path.join(savetxt, var.title + '_t-test_' + type + '_pooled.txt')
+        else:
+            outFile = os.path.join(savetxt, var.title + '_t-test_' + type + '.txt')
         if os.path.isfile(outFile):
             with open(outFile, 'r') as txt:
                 if len(txt.readlines()) > 10000:
-                    writetxt(outFile, 'w', type, dataList, statList, var)
+                    writetxt(outFile, 'w', type, dataList, statList, var, pooldata)
                 else:
-                    writetxt(outFile, 'a', type, dataList, statList, var)
+                    writetxt(outFile, 'a', type, dataList, statList, var, pooldata)
         else:
-            writetxt(outFile, 'w', type, dataList, statList, var)
+            writetxt(outFile, 'w', type, dataList, statList, var, pooldata)
 
-def ttest_stype(inFile, site, variable, savetxt=None, printtxt=False):
+def ttest_stype(inFile, site, variable, pooldata=False, savetxt=None, printtxt=False):
     # check input parameters
     # To be done
 
@@ -592,10 +616,13 @@ def ttest_stype(inFile, site, variable, savetxt=None, printtxt=False):
     var = Variable(variable)
     siteList = [siteDict[site]]
     stypeList = [typeDict[1], typeDict[2]]
-    dataList = extract_from_excel(inFile, var, siteList, stypeList, 2)
-    ttest(dataList, 'cultural_vs_natural', var, savetxt, printtxt)
+    if pooldata:
+        dataList = extract_from_excel(inFile, var, siteList, stypeList, 4)
+    else:
+        dataList = extract_from_excel(inFile, var, siteList, stypeList, 2)
+    ttest(dataList, 'cultural_vs_natural', var, pooldata, savetxt, printtxt)
 
-def ttest_site(inFile, site1, site2, stype, variable, savetxt=None, printtxt=False):
+def ttest_site(inFile, site1, site2, stype, variable, pooldata=False, savetxt=None, printtxt=False):
     # check input parameters
     # To be done
 
@@ -603,8 +630,11 @@ def ttest_site(inFile, site1, site2, stype, variable, savetxt=None, printtxt=Fal
     var = Variable(variable)
     siteList = [siteDict[site1], siteDict[site2]]
     stypeList = [typeDict[stype]]
-    dataList = extract_from_excel(inFile, var, siteList, stypeList, 2)
-    ttest(dataList, 'site_vs_site', var, savetxt, printtxt)
+    if pooldata:
+        dataList = extract_from_excel(inFile, var, siteList, stypeList, 4)
+    else:
+        dataList = extract_from_excel(inFile, var, siteList, stypeList, 2)
+    ttest(dataList, 'site_vs_site', var, pooldata, savetxt, printtxt)
 
 ########################################################################################################################
 # dictionaries
