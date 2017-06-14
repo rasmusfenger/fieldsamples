@@ -14,13 +14,11 @@ Variable,Title,Sheet,Column,xname,yname,depth
 20,Total biomass,Biomass,14,dry weight (g),none,no
 21,NDVI handheld,Biomass,19,ndvi,none,no
 22,LAI,Veg analysis,13,LAI,none,no
-30,Phosphorus-liquid,Olsen P,15,P (mg/l),depth (cm),yes
-31,Phosphorus-DWsoil,Olsen P,19,P (mg/kg DW),depth (cm),yes
-32,Phosphorus-DWsoil-corrected,Olsen P,31,P (mg/kg DW),depth (cm),yes
-33,Phosphorus-vol-1,Olsen P,26,P (g P/m3),depth (cm),yes
-34,Phosphorus-vol-2,Olsen P,32,P (mg P/cm3),depth (cm),yes
-35,Phosphorus-vol-2,Olsen P,33,P (g P/m3),depth (cm),yes
-36,Phosphorus-di,Depth integrated,4,P (mg/35cm3 soil profile),none,no
+30,Phosphorus-liquid,Olsen P,14,P (mg/l),depth (cm),yes
+31,Phosphorus-DWsoil,Olsen P,23,P (mg/kg DW),depth (cm),yes
+32,Phosphorus-vol,Olsen P,25,P (g P/m3),depth (cm),yes
+34,Phosphorus-DWsoil-gapf,Olsen P,27,P (mg/kg DW),depth (cm),yes
+35,Phosphorus-vol-gapf,Olsen P,28,P g/m3,depth (cm),yes
 40,NO3-liquid,Wet analysis,7,NO3 (ug/L),depth (cm),yes
 41,NH4-liquid,Wet analysis,8,NH4 (ug/L),depth (cm),yes
 42,TOC-liquid,Wet analysis,9,TOC (mg/L),depth (cm),yes
