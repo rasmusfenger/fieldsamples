@@ -23,17 +23,17 @@ class Data(object):
 
 class Variable(object):
     # Defines a variable class based on info in csv file in root.
-    def __init__(self, variable, mod, di):
+    def __init__(self, variable, mod=False, di=False):
         inFile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'variable_data.csv')
         df = np.loadtxt(inFile, delimiter=',', skiprows=1, dtype=str)
         for row in df:
             if int(row[0]) == int(variable):
                 self.var = int(row[0])
-                self.title = row[1]
+                self.title = unicode(row[1], "utf-8")
                 self.sheet = row[2]
                 self.column = int(row[3])
-                self.xname = row[4]
-                self.yname = row[5]
+                self.xname = unicode(row[4], "utf-8")
+                self.yname = unicode(row[5], "utf-8")
                 self.isdepth = row[6]
                 self.mod = mod
                 self.di = di
@@ -90,7 +90,7 @@ def extract_from_excel(inFile, var, site, sitetype, groupby='plot'):
 
     dataList = []
     # read excel with pandas
-    df = pd.read_excel(inFile, var.sheet, header=2, parse_cols='A:AZ', na_values='none')
+    df = pd.read_excel(inFile, var.sheet, header=2, parse_cols='A:BZ', na_values='none')
     # group by excel column site
     for site in siteList:
         sitegroup = df.groupby(['Site']).get_group(site)
@@ -155,7 +155,7 @@ def pool_depth(dataList):
                                                                   'var': varList}, depthList))
     return outList
 
-def pool_plot(dataList):
+def pool_plot(dataList, stat=False):
     # Pooling together plots at each sitetype. Relevant in plotmode 4.
     outList = []
     for site in range(1,6):
@@ -163,15 +163,18 @@ def pool_plot(dataList):
             a = []
             for data in dataList:
                 if data.site == siteDict[site] and data.sitetype == typeDict[stype]:
-                    a.append(data.observation)
+                    a.append(data.observation[0])
             a = np.asarray(a)
             if a.size > 0:
-                mean = a[~np.isnan(a)].mean()
-                std = a[~np.isnan(a)].std()
-                size = a[~np.isnan(a)].size
-                var = a[~np.isnan(a)].var(ddof=1)
-                outList.append(Data(siteDict[site], typeDict[stype], 'all', {'mean': mean, 'std': std, 'n': size, 'var': var}))
-
+                if stat:
+                    mean = a[~np.isnan(a)].mean()
+                    std = a[~np.isnan(a)].std()
+                    size = a[~np.isnan(a)].size
+                    var = a[~np.isnan(a)].var(ddof=1)
+                    outList.append(Data(siteDict[site], typeDict[stype], 'all',
+                                        {'mean': mean, 'std': std, 'n': size, 'var': var}))
+                else:
+                    outList.append(Data(siteDict[site], typeDict[stype], 'all', a))
     return outList
 
 def getData(inFile, var, site, sitetype, groupby='plot', mod=False, di=False):

@@ -91,11 +91,11 @@ def layout2(title, xlabel, ylabel, plotmode, site, xlim, invertY=False, savefig=
     if xlim:
         min = xlim/15
         plt.xlim([-min,xlim])
-    if site == 'Kangeq':
-        plt.gca().set_ylabel(ylabel)
-    else:
-        # plt.yticks([])
-        plt.yticks([5,10,15,20,25,30,35], " ")
+    #if site == 'Kangeq':
+    plt.gca().set_ylabel(ylabel)
+    #else:
+    #    plt.yticks([])
+    #    plt.yticks([5,10,15,20,25,30,35], " ")
     if invertY:
         # invert y-axis (for profile plots)
         plt.gca().invert_yaxis()
@@ -106,7 +106,7 @@ def layout2(title, xlabel, ylabel, plotmode, site, xlim, invertY=False, savefig=
         if not os.path.isdir(dir):
             os.mkdir(dir)
         fname = os.path.join(dir, title + '.png')
-        plt.savefig(fname, dpi=150)
+        plt.savefig(fname, dpi=150, bbox_inches = 'tight')
         # if dpi should be the same as plt.show then use: dpi=plt.gcf().dpi
     plt.show()
 
@@ -259,6 +259,7 @@ def plot_scatter(dsX, dsY, title, plotmode, reg, savefig):
                 # modify errorbar linestyle
                 if x.sitetype == 'Natural':
                     eb[-1][0].set_linestyle('--')
+                    eb[-1][1].set_linestyle('--')
             fitListX.append(x.observation['mean'])
             fitListY.append(y.observation['mean'])
 
@@ -269,7 +270,7 @@ def plot_scatter(dsX, dsY, title, plotmode, reg, savefig):
         fit = np.polyfit(fitListX, fitListY, 1)
         plt.plot(fitListX, fit[0] * fitListX + fit[1], color='black')
         slope, intercept, r_value, p_value, std_err = stats.linregress(fitListX, fitListY)
-        text = 'r2 = '+'{0:.2f}'.format(r_value*r_value)
+        text = '$R^2$ = '+'{0:.2f}'.format(r_value*r_value)
     else:
         text = None
     layout(title, xlabel, ylabel, plotmode, invertY=False, text=text, savefig=savefig)
@@ -295,6 +296,6 @@ def plot(inFile, site, stype, var1, var2, plotmode, xlim=None, reg=False, savefi
         dsX = getData(inFile, var1, site, stype, groupby='plot', mod=var1.mod, di=var1.di)
         dsY = getData(inFile, var2, site, stype, groupby='plot', mod=var2.mod, di=var2.di)
         if int(plotmode) == 4:
-            dsX.data = pool_plot(dsX.data)
-            dsY.data = pool_plot(dsY.data)
+            dsX.data = pool_plot(dsX.data, stat=True)
+            dsY.data = pool_plot(dsY.data, stat=True)
         plot_scatter(dsX, dsY, title, plotmode, reg, savefig)

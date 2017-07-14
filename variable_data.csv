@@ -11,22 +11,40 @@ Variable,Title,Sheet,Column,xname,yname,depth
 13,Roots < 1mm - DW soil,Roots,21,dry weight g/ kg dry soil,depth (cm),yes
 14,Roots > 1 mm - DW soil,Roots,22,dry weight g/ kg dry soil,depth (cm),yes
 15,Horse tail - DW soil,Roots,23,dry weight g/ kg dry soil,depth (cm),yes
+16,Roots total excl HT,Roots,24,dry weight g/100cm3,depth (cm),yes
+17,Roots total incl HT,Roots,25,dry weight g/100cm3,depth (cm),yes
 20,Total biomass,Biomass,14,dry weight (g),none,no
 21,NDVI handheld,Biomass,19,ndvi,none,no
 22,LAI,Veg analysis,13,LAI,none,no
-30,Phosphorus-liquid,Olsen P,14,P (mg/l),depth (cm),yes
+23,biomass_lai_1,Biomass,20,biomass lai index,none,no
+24,biomass_lai_2,Biomass,21,harvest_lai_2,none,no
+25,biomass lai index,Biomass,22,biomass lai index,none,no
+30,Phosphorus-liquid,Olsen P,18,P (mg/l),depth (cm),yes
 31,Phosphorus-DWsoil,Olsen P,23,P (mg/kg DW),depth (cm),yes
-32,Phosphorus-vol,Olsen P,25,P (g P/m3),depth (cm),yes
+32,Phosphorus-vol,Olsen P,25,P (g P/m$^3$),depth (cm),yes
 34,Phosphorus-DWsoil-gapf,Olsen P,27,P (mg/kg DW),depth (cm),yes
-35,Phosphorus-vol-gapf,Olsen P,28,P g/m3,depth (cm),yes
-40,NO3-liquid,Wet analysis,7,NO3 (ug/L),depth (cm),yes
-41,NH4-liquid,Wet analysis,8,NH4 (ug/L),depth (cm),yes
-42,TOC-liquid,Wet analysis,9,TOC (mg/L),depth (cm),yes
-43,TN-liquid,Wet analysis,10,TN (mg/L),depth (cm),yes
-44,DON-liquid,Wet analysis,11,DON (ug/L),depth (cm),yes
-45,NO3-DW soil,Wet analysis,16,NO3 (ug/g DW),depth (cm),yes
-46,NH4-DW soil,Wet analysis,20,NH4 (ug/g DW),depth (cm),yes
-47,TN-DW soil,Wet analysis,24,TN (mg/g DW),depth (cm),yes
-48,DON-DW soil,Wet analysis,28,DON (ug/g DW,depth (cm),yes
-49,TOC-DW soil,Wet analysis,32,TOC (mg/g DW),depth (cm),yes
-
+35,Phosphorus,Olsen P,28,P g/m$^3$,depth (cm),yes
+40,NO3-liquid,Wet analysis,14,NO3 (ug/L),depth (cm),yes
+41,NH4-liquid,Wet analysis,23,NH4 (ug/L),depth (cm),yes
+42,TOC-liquid,Wet analysis,32,TOC (mg/L),depth (cm),yes
+43,TN-liquid,Wet analysis,41,TN (mg/L),depth (cm),yes
+44,DON-liquid,Wet analysis,50,DON (ug/L),depth (cm),yes
+45,NO$_3$ wet analysis,Wet analysis,22,NO$_3$ (g/m$^3$),depth (cm),yes
+46,NH$_4$ wet analysis,Wet analysis,31,NH$_4$ (g/m$^3$),depth (cm),yes
+47,TOC wet analysis,Wet analysis,40,TOC (g/m$^3$),depth (cm),yes
+48,TN wet analysis,Wet analysis,49,TN (g/m$^3$,depth (cm),yes
+49,DON-DW soil,Wet analysis,58,DON (g/m$^3$),depth (cm),yes
+50,N% total in soil,C N analysis,8,N% total,depth (cm),yes
+51,C% total in soil,C N analysis,9,C% total,depth (cm),yes
+52,N15 ‰ AIR in soil,C N analysis,10,$\delta^{15}$N (‰ AIR),depth (cm),yes
+53,C13 ‰ PDB in soil,C N analysis,11,$\delta^{13}$C (‰ PDB),depth (cm),yes
+54,C_N ratio in soil,C N analysis,13,C/N ratio,depth (cm),yes
+55,N total in soil,C N analysis,16,N g/m3,depth (cm),yes
+60,Green uav,uav,4,Green,none,no
+61,Red uav,uav,5,Red,none,no
+62,Rededge uav,uav,6,Rededge,none,no
+63,Nir uav,uav,7,Nir,none,no
+64,NDVI uav,uav,8,NDVI,none,no
+65,OSAVI uav,uav,9,OSAVI,none,no
+66,NDRE uav,uav,10,NDRE,none,no
+70,P mean,mix,6,P g/m$^3$,none,no

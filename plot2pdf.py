@@ -54,7 +54,7 @@ def plot2pdf2(variables, plotmode, inFolder, outFilename):
     from reportlab.lib.units import inch, cm
     from reportlab.lib.pagesizes import letter, landscape
 
-    figlocList = [[15.3, 23.5], [11.6, 23.5], [7.9, 23.5], [4.2, 23.5], [0.5, 23.5]]
+    figlocList = [[15.3, 23.5], [11.7, 23.5], [8.1, 23.5], [4.5, 23.5], [0.9, 23.5]]
     titleloc = 27.5
     c = canvas.Canvas(outFilename)  # , pagesize=landscape(letter))
 
