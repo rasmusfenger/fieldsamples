@@ -11,7 +11,7 @@ def issig(p):
         s = 'nan'
     return s
 
-def ttest(ds, var, mode, savetxt=None, printtxt=False, equal_var=True):
+def ttest(ds, var, mode, savetxt=None, printtxt=False, equal_var=False):
     from scipy.stats import ttest_ind_from_stats
     # make text header
     header = var.title + ' t-test'
@@ -69,13 +69,14 @@ def ttest(ds, var, mode, savetxt=None, printtxt=False, equal_var=True):
             txt.write(header + testresult)
         print 'Text-file created: ' + outFile
 
-def ttest_manual(listA, listB, equal_var=True):
+def ttest_manual(listA, listB, equal_var=True, print_it=True):
     from scipy.stats import ttest_ind
     t, p = ttest_ind(listA, listB, equal_var=equal_var)
-    print "\n%s\tt = %.3f  \tp = %.3f \tn = %d \t" % ('', t, p, len(listA)) + issig(float(p))
+    if print_it:
+        print "\n%s\tt = %.3f  \tp = %.3f \tn = %d \t" % ('', t, p, len(listA)) + issig(float(p))
+    return t, p
 
-
-def ttest_stype(inFile, site, var, savetxt=None, printtxt=False, equal_var=True):
+def ttest_stype(inFile, site, var, savetxt=None, printtxt=False, equal_var=False):
     # get data
     # distinguish between variables with depths and no depth. If depth, the values belong to a population of values
     # from the same depth. Eg. natural 10 cm (n=6) should be evaluated against cultural 10 cm. 5 and 10 cm can not be
@@ -91,13 +92,16 @@ def ttest_stype(inFile, site, var, savetxt=None, printtxt=False, equal_var=True)
         ds.data = pool_plot(ds.data, stat=True)
     ttest(ds, var, mode, savetxt, printtxt, equal_var)
 
-def ttest_site(inFile, site1, site2, stype, variable, savetxt=None, printtxt=False, equal_var=True):
+def ttest_site(inFile, site1, site2, stype, var, savetxt=None, printtxt=False, equal_var=False):
     # get data
-    var = Variable(variable)
     siteList = [siteDict[site1], siteDict[site2]]
     stypeList = [typeDict[stype]]
+    mode = 2
     if var.isdepth == 'yes':
-        dataList = extract_from_excel(inFile, var, siteList, stypeList, 2)
+        ds = getData(inFile, var, siteList, stypeList, groupby='depth', mod=var.mod)
+        ds.data = pool_depth(ds.data)
+        #dataList = extract_from_excel(inFile, var, siteList, stypeList, 2)
     else:
-        dataList = extract_from_excel(inFile, var, siteList, stypeList, 4)
-    ttest(dataList, 2, var, savetxt, printtxt, equal_var)
+        ds = getData(inFile, var, siteList, stypeList, groupby='depth', mod=var.mod)
+        #dataList = extract_from_excel(inFile, var, siteList, stypeList, 4)
+    ttest(ds, var, mode, savetxt, printtxt, equal_var)

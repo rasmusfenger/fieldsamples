@@ -59,13 +59,24 @@ def check_input(inFile, site, stype, var1, var2, plotmode, savefig):
 
 ########################################################################################################################
 # plotting
-def layout(title, xlabel, ylabel, plotmode, invertY=False, text=None, savefig=None):
+def layout(figname, xlabel, ylabel, plotmode, xlim, ylim, invertY, text, savefig, title, legend, size):
     # define plot layout
-    plt.gca().set_title(title)
     plt.gca().set_xlabel(xlabel)
     plt.gca().set_ylabel(ylabel)
-    # anchor legend box
-    lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    if size:
+        plt.gcf().set_size_inches(size,size)
+    if title:
+        if title == True:
+            plt.gca().set_title(figname)
+        else:
+            plt.gca().set_title(title)
+    if xlim:
+        plt.xlim(xlim)
+    if ylim:
+        plt.ylim(ylim)
+    if legend:
+        # anchor legend box
+        lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     if invertY:
         # invert y-axis (for profile plots)
         plt.gca().invert_yaxis()
@@ -78,39 +89,15 @@ def layout(title, xlabel, ylabel, plotmode, invertY=False, text=None, savefig=No
         dir = os.path.join(savefig, 'plotmode_' + str(plotmode))
         if not os.path.isdir(dir):
             os.mkdir(dir)
-        fname = os.path.join(dir, title + '.png')
-        plt.savefig(fname, dpi=150, bbox_extra_artists = (lgd,), bbox_inches = 'tight')
+        fname = os.path.join(dir, figname + '.png')
+        if legend:
+            plt.savefig(fname, dpi=150, bbox_extra_artists = (lgd,), bbox_inches = 'tight')
+        else:
+            plt.savefig(fname, dpi=150, bbox_inches='tight')
         # if dpi should be the same as plt.show then use: dpi=plt.gcf().dpi
     plt.show()
 
-def layout2(title, xlabel, ylabel, plotmode, site, xlim, invertY=False, savefig=None):
-    fig = plt.gcf()
-    fig.set_size_inches(2.5, 2.5)
-    plt.gca().set_xlabel(xlabel)
-    plt.gca().set_title(site)
-    if xlim:
-        min = xlim/15
-        plt.xlim([-min,xlim])
-    #if site == 'Kangeq':
-    plt.gca().set_ylabel(ylabel)
-    #else:
-    #    plt.yticks([])
-    #    plt.yticks([5,10,15,20,25,30,35], " ")
-    if invertY:
-        # invert y-axis (for profile plots)
-        plt.gca().invert_yaxis()
-        plt.gca().set_ylim([31, 4])
-
-    if savefig:
-        dir = os.path.join(savefig, 'plotmode_' + str(plotmode))
-        if not os.path.isdir(dir):
-            os.mkdir(dir)
-        fname = os.path.join(dir, title + '.png')
-        plt.savefig(fname, dpi=150, bbox_inches = 'tight')
-        # if dpi should be the same as plt.show then use: dpi=plt.gcf().dpi
-    plt.show()
-
-def plot_profile(ds, title, plotmode, xlim, savefig):
+def plot_profile(ds, figname, plotmode, xlim, ylim, savefig, title, legend, size):
     # define axis labels
     xlabel = ds.var.xname
     if ds.mod:
@@ -175,23 +162,25 @@ def plot_profile(ds, title, plotmode, xlim, savefig):
                 eb = plt.errorbar(x, y, xerr=xerr, ls=cDict[data.sitetype], c=cDict[data.site],
                                   marker=cDict[data.sitetype + 'M'], capsize=3)#, linewidth=2.0, markersize=10.0)
                 if data.sitetype == 'Natural':
-                    eb[-1][0].set_linestyle('--')
+                    try:
+                        eb[-1][0].set_linestyle('--')
+                    except:
+                        pass
+                title = data.site
+    layout(figname, xlabel, ylabel, plotmode, xlim, ylim, invertY=True, text=None, savefig=savefig, title=title, legend=legend, size=size)
 
-    if plotmode < 2.3:
-        layout(title, xlabel, ylabel, plotmode, invertY=True, savefig=savefig)
-    else:
-        layout2(title, xlabel, ylabel, plotmode, data.site, xlim, invertY=True, savefig=savefig)
 
-
-def plot_scatter(dsX, dsY, title, plotmode, reg, savefig):
+def plot_scatter(dsX, dsY, figname, plotmode, xlim, ylim, reg, savefig, title, legend, size):
     # define axis labels
     xlabel = dsX.var.xname
     if dsX.di:
+        #xlabel = xlabel.replace('^3','^2')
         xlabel += ' in ' + str(dsX.di) + ' cm'
     if dsX.mod:
         xlabel += '- ' + dsX.mod
     ylabel = dsY.var.xname
     if dsY.di:
+        #ylabel = ylabel.replace('^3', '^2')
         ylabel += ' in ' + str(dsY.di) + ' cm'
     if dsY.mod:
         ylabel += '- ' + dsY.mod
@@ -230,6 +219,11 @@ def plot_scatter(dsX, dsY, title, plotmode, reg, savefig):
                 if np.isnan(x.observation[num]) == False and np.isnan(y.observation[num]) == False:
                     fitListX.append(x.observation[num])
                     fitListY.append(y.observation[num])
+        if title == False:
+            if len(dataListX) == 60:
+                title = 'All'
+            else:
+                title = x.site
         if dimcheck != '':
             print dimcheck + ' have more than 1 data record per point. Values have been summed'
 
@@ -259,7 +253,8 @@ def plot_scatter(dsX, dsY, title, plotmode, reg, savefig):
                 # modify errorbar linestyle
                 if x.sitetype == 'Natural':
                     eb[-1][0].set_linestyle('--')
-                    eb[-1][1].set_linestyle('--')
+                    if plotmode == 4.3:
+                        eb[-1][1].set_linestyle('--')
             fitListX.append(x.observation['mean'])
             fitListY.append(y.observation['mean'])
 
@@ -270,32 +265,32 @@ def plot_scatter(dsX, dsY, title, plotmode, reg, savefig):
         fit = np.polyfit(fitListX, fitListY, 1)
         plt.plot(fitListX, fit[0] * fitListX + fit[1], color='black')
         slope, intercept, r_value, p_value, std_err = stats.linregress(fitListX, fitListY)
-        text = '$R^2$ = '+'{0:.2f}'.format(r_value*r_value)
+        text = '$R^2$ = '+'{0:.2f}'.format(r_value*r_value) + '\np   = '+'{0:.3f}'.format(p_value)
     else:
         text = None
-    layout(title, xlabel, ylabel, plotmode, invertY=False, text=text, savefig=savefig)
+    layout(figname, xlabel, ylabel, plotmode, xlim, ylim, invertY=False, text=text, savefig=savefig, title=title,
+           legend=legend, size=size)
 
-def plot(inFile, site, stype, var1, var2, plotmode, xlim=None, reg=False, savefig=None):
+def plot(inFile, site, stype, var1, var2, plotmode, xlim=None, ylim=None, reg=False, savefig=None, title=True, legend=True, size=None):
     # check input parameters
     check_input(inFile, site, stype, var1, var2, plotmode, savefig)
 
     # Soil profile plots
-    #var1 = Variable(varDict[var1][0])
     if int(plotmode) <= 2:
-        title = var1.title + ' ' + siteDict[site]
+        figname = var1.title + ' ' + siteDict[site]
         if int(plotmode) == 1:
             ds = getData(inFile, var1, site, stype, groupby='plot', mod=var1.mod, di=False)
         elif int(plotmode) == 2:
             ds = getData(inFile, var1, site, stype, groupby='depth', mod=var1.mod, di=False)
             ds.data = pool_depth(ds.data)
-        plot_profile(ds, title, plotmode, xlim, savefig)
+        plot_profile(ds, figname, plotmode, xlim, ylim, savefig, title, legend, size)
 
     # Scatter plots
     elif int(plotmode) >= 3:
-        title = var1.title + '(x) vs ' + var2.title + '(y)'
+        figname = var1.title + '(x) vs ' + var2.title + '(y)' + ' ' + siteDict[site]
         dsX = getData(inFile, var1, site, stype, groupby='plot', mod=var1.mod, di=var1.di)
         dsY = getData(inFile, var2, site, stype, groupby='plot', mod=var2.mod, di=var2.di)
         if int(plotmode) == 4:
             dsX.data = pool_plot(dsX.data, stat=True)
             dsY.data = pool_plot(dsY.data, stat=True)
-        plot_scatter(dsX, dsY, title, plotmode, reg, savefig)
+        plot_scatter(dsX, dsY, figname, plotmode, xlim, ylim, reg, savefig, title, legend, size)
