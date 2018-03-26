@@ -67,6 +67,7 @@ def depth_integrate(dataList, depth):
             depthUsed = depth
         depthIndex = x2.index(depthUsed) + 1
         intArea = simps(y2[:depthIndex], x2[:depthIndex])
+        intArea = intArea/depth
         dataList[i].observation = [intArea]
         dataList[i].depth = [depthUsed]
     return dataList
