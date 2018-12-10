@@ -67,7 +67,10 @@ def depth_integrate(dataList, depth):
             depthUsed = depth
         depthIndex = x2.index(depthUsed) + 1
         intArea = simps(y2[:depthIndex], x2[:depthIndex])
-        intArea = intArea/depth
+        # for depth weighed
+        #intArea = intArea/depthUsed
+        # when unit is in m3 divide by 100 so that depths are in m instead of cm
+        intArea = intArea/100
         dataList[i].observation = [intArea]
         dataList[i].depth = [depthUsed]
     return dataList
@@ -80,6 +83,10 @@ def extract_from_excel(inFile, var, site, sitetype, groupby='plot'):
     siteList = []
     if site == 6:
         for num in range(1, 6):
+            siteList.append(siteDict[num])
+    # extract only iffiartafik and Ersaa
+    elif site == 8:
+        for num in [2,4]:
             siteList.append(siteDict[num])
     else:
         siteList.append(siteDict[site])

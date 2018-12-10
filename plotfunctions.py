@@ -25,7 +25,7 @@ def check_input(inFile, site, stype, var1, var2, plotmode, savefig):
         sys.exit(0)
 
     # Valid parameters
-    plotmodeValid = ['1', '2', '2.1', '2.2', '2.3', '3', '4', '4.1', '4.2', '4.3']
+    plotmodeValid = ['1', '2', '2.1', '2.2', '2.3', '2.4', '2.5', '3', '3.1', '4', '4.1', '4.2', '4.3']
 
     errList = []
     # First check input parameters
@@ -59,45 +59,81 @@ def check_input(inFile, site, stype, var1, var2, plotmode, savefig):
 
 ########################################################################################################################
 # plotting
-def layout(figname, xlabel, ylabel, plotmode, xlim, ylim, invertY, text, savefig, title, legend, size):
+
+def convertDataType(siteType):
+    if siteType == 'Cultural':
+        convertedType = 'archaeology'
+    elif siteType == 'Natural':
+        convertedType = 'reference'
+    return convertedType
+
+def layout(figname, xlabel, ylabel, plotmode, xlim, ylim, invertY, text, savefig, title, legend, size, grid, textnote):
     # define plot layout
-    plt.gca().set_xlabel(xlabel)
-    plt.gca().set_ylabel(ylabel)
+    if xlabel:
+        plt.gca().set_xlabel(xlabel)
+    if ylabel:
+        plt.gca().set_ylabel(ylabel)
     if size:
-        plt.gcf().set_size_inches(size,size)
+        plt.gcf().set_size_inches(size[0],size[1])
     if title:
         if title == True:
-            plt.gca().set_title(figname)
+            plt.gca().set_title(figname, fontname='Arial')
         else:
-            plt.gca().set_title(title)
+            plt.gca().set_title(title, fontname='Arial')
     if xlim:
         plt.xlim(xlim)
     if ylim:
         plt.ylim(ylim)
     if legend:
-        # anchor legend box
-        lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        from matplotlib.patches import Patch
+        from matplotlib.lines import Line2D
+        if legend == 'special_1':
+            legend_elements = [Patch(facecolor=cDict['Sandnes'], label='Sandnes'),
+                               Patch(facecolor=cDict['Iffiartafik'], label='Iffiartafik'),
+                               Patch(facecolor=cDict['Qoornoq'], label='Qoornoq'),
+                               Patch(facecolor=cDict['Ersaa'], label='Ersaa'),
+                               Patch(facecolor=cDict['Kangeq'], label='Kangeq'),
+                               Line2D([0], [0], marker=cDict['CulturalM'], color='w', label='Archaeological site',
+                                      markerfacecolor='none', markeredgecolor='black', markersize=7),
+                               Line2D([0], [0], marker=cDict['NaturalM'], color='w', label='Reference area',
+                                      markerfacecolor='none', markeredgecolor='black', markersize=7)]
+            #Line2D([0], [0], color='red', lw=4, label='2 std.dev. Archaeological site')
+            lgd = plt.legend(handles=legend_elements, bbox_to_anchor=(1.05, 1), loc=8, borderaxespad=0.)
+        elif legend == 'special_2':
+            legend_elements = [Line2D([5], [5], marker=cDict['CulturalM'], color='black', label='Archaeological site',
+                                      markersize=7, markeredgecolor='black', markerfacecolor='white'),
+                               Line2D([], [], marker=cDict['NaturalM'], color='black', label='Reference area',
+                                      markersize=7, markeredgecolor='black', markerfacecolor='white', linestyle='--')]
+            lgd = plt.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(0, -0.2), borderaxespad=0.)
+        else:
+            # anchor legend box
+            lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     if invertY:
         # invert y-axis (for profile plots)
         plt.gca().invert_yaxis()
         plt.gca().set_ylim([31, 4])
     if text:
         # placing text. Used for r2 value when plotting regression line
-        at = AnchoredText(text, prop=dict(size=10), frameon=False, loc=2,)
+        at = AnchoredText(text, prop=dict(size=10), frameon=False, loc=2)
         plt.gca().add_artist(at)
+    if grid:
+        plt.gca().set_axisbelow(True)
+        plt.gca().grid()
+    if textnote:
+        t = plt.gca().text(textnote[0], textnote[1], textnote[2], fontsize=textnote[3], transform=plt.gca().transAxes)
     if savefig:
         dir = os.path.join(savefig, 'plotmode_' + str(plotmode))
         if not os.path.isdir(dir):
             os.mkdir(dir)
         fname = os.path.join(dir, figname + '.png')
         if legend:
-            plt.savefig(fname, dpi=150, bbox_extra_artists = (lgd,), bbox_inches = 'tight')
+            plt.savefig(fname, dpi=1000, bbox_extra_artists = (lgd, t), bbox_inches = 'tight')
         else:
-            plt.savefig(fname, dpi=150, bbox_inches='tight')
+            plt.savefig(fname, dpi=1000, bbox_inches='tight')
         # if dpi should be the same as plt.show then use: dpi=plt.gcf().dpi
     plt.show()
 
-def plot_profile(ds, figname, plotmode, xlim, ylim, savefig, title, legend, size):
+def plot_profile(ds, figname, plotmode, xlim, ylim, savefig, title, legend, size, grid, textnote):
     # define axis labels
     xlabel = ds.var.xname
     if ds.mod:
@@ -132,11 +168,21 @@ def plot_profile(ds, figname, plotmode, xlim, ylim, savefig, title, legend, size
                     col = cDict['plot' + str(data.plot)]
                     plt.plot(x, y, ls=cDict[data.sitetype], c=col, label=labelname)
     elif int(plotmode) == 2:
-        for data in dataList:
+        fig, axes = plt.subplots(1, len(dataList)/2, sharey=True, sharex=True)
+        if len(dataList) > 2:
+            axes_list = [item for item in axes]
+        else:
+            axes_list = [axes]
+        legendList = []
+        leglabelList = []
+        plot_number = 0
+        for data in reversed(dataList):
             x = np.asarray(data.observation['mean'])
             y = np.asarray(data.depth)
             std = np.asarray(data.observation['std'])
-            labelname = data.site + ' ' + data.sitetype + ' mean'
+            n = np.asarray(data.observation['n'])
+            labelname = data.site + ' ' + convertDataType(data.sitetype)
+            ax = axes_list[int(plot_number)]
             if plotmode == 2:
                 plt.plot(x, y, ls=cDict[data.sitetype], c=cDict[data.site], label=labelname,
                          marker=cDict[data.sitetype + 'M'])
@@ -152,25 +198,84 @@ def plot_profile(ds, figname, plotmode, xlim, ylim, savefig, title, legend, size
                          marker=cDict[data.sitetype + 'M'])
                 plt.fill_betweenx(y, x - std, x + std, color=cDict[data.site], alpha=0.1)
             elif plotmode == 2.3:
-                #plt.plot(x, y, ls=cDict[data.sitetype], c=cDict[data.site], marker=cDict[data.sitetype + 'M'])
                 zerotup = ()
                 for elem in std:
                     zerotup += (0,)
                 if data.sitetype == 'Natural':
                     std = std * -1
                 xerr = [zerotup, std]
-                eb = plt.errorbar(x, y, xerr=xerr, ls=cDict[data.sitetype], c=cDict[data.site],
+                eb = ax.errorbar(x, y, xerr=xerr, ls=cDict[data.sitetype], c=cDict[data.site],
                                   marker=cDict[data.sitetype + 'M'], capsize=3)#, linewidth=2.0, markersize=10.0)
                 if data.sitetype == 'Natural':
                     try:
                         eb[-1][0].set_linestyle('--')
                     except:
                         pass
-                title = data.site
-    layout(figname, xlabel, ylabel, plotmode, xlim, ylim, invertY=True, text=None, savefig=savefig, title=title, legend=legend, size=size)
+                legendList.append(eb)
+                leglabelList.append(labelname)
+            # add standard error
+            elif plotmode == 2.4:
+                se = std/np.sqrt(n)
+                zerotup = ()
+                for elem in se:
+                    zerotup += (0,)
+                if data.sitetype == 'Natural':
+                    se = se * -1
+                xerr = [zerotup, se]
+                eb = ax.errorbar(x, y, xerr=xerr, ls=cDict[data.sitetype], c=cDict[data.site],
+                                  marker=cDict[data.sitetype + 'M'], capsize=3)#, linewidth=2.0, markersize=10.0)
+                if data.sitetype == 'Natural':
+                    try:
+                        eb[-1][0].set_linestyle('--')
+                    except:
+                        pass
+                legendList.append(eb)
+                leglabelList.append(labelname)
+            elif plotmode == 2.5:
+                se = std/np.sqrt(n)
+                zerotup = ()
+                for elem in se:
+                    zerotup += (0,)
+                if data.sitetype == 'Natural':
+                    se = se * -1
+                xerr = [zerotup, se]
+                eb = ax.errorbar(x, y, xerr=xerr, ls=cDict[data.sitetype], c=cDict[data.site],
+                                  marker=cDict[data.sitetype + 'M'], capsize=3)#, linewidth=2.0, markersize=10.0)
+                if data.sitetype == 'Natural':
+                    try:
+                        eb[-1][0].set_linestyle('--')
+                    except:
+                        pass
+                legendList.append(eb)
+                leglabelList.append(labelname)
+                yticksList = ['','3-8','8-13','','18-23','','28-33','']
+                #yticksList = ['', '', '', '', '', '', '', '']
+                ax.set_yticklabels(yticksList)
+
+            if title:
+                ax.set_title(data.site)
+            # set y axis label on only first subplot
+            if plot_number == 0:
+                ax.set_ylabel(ylabel)
+            plot_number += 0.5
+        # set x axis label
+        fig.text(0.5, -0.05, xlabel, ha='center')
+        # define legend
+        if legend == True:
+            if len(axes_list) == 5:
+                legbox_xshif = 0.15
+            else:
+                legbox_xshif = 0
+            lgd = axes_list[0].legend(legendList, leglabelList, loc='upper left', bbox_to_anchor=(legbox_xshif, -0.3),
+                                   ncol=len(axes_list), fancybox=True, shadow=True)
+            legend = None
+        ylabel = None
+        xlabel = None
+        title = None
+        layout(figname, xlabel, ylabel, plotmode, xlim, ylim, invertY=True, text=None, savefig=savefig, title=title, legend=legend, size=size, grid=grid, textnote=textnote)
 
 
-def plot_scatter(dsX, dsY, figname, plotmode, xlim, ylim, reg, savefig, title, legend, size):
+def plot_scatter(dsX, dsY, figname, plotmode, xlim, ylim, reg, savefig, title, legend, size, grid, textnote):
     # define axis labels
     xlabel = dsX.var.xname
     if dsX.di:
@@ -193,6 +298,9 @@ def plot_scatter(dsX, dsY, figname, plotmode, xlim, ylim, reg, savefig, title, l
         # Scatter plot of all observations
         labelList = []
         dimcheck = ''
+        # collect cultural observations and natural observations in two lists (only relevant for plotmode 3.1)
+        culList = []
+        natList = []
         for num in range(0, len(dataListX)):
             x = dataListX[num]
             y = dataListY[num]
@@ -206,6 +314,11 @@ def plot_scatter(dsX, dsY, figname, plotmode, xlim, ylim, reg, savefig, title, l
             elif len(x.observation) > 1 and len(y.observation) == 1:
                 x.observation = [np.sum(x.observation)]
                 dimcheck = 'x-values'
+            # only relevant for plotmode 3.1
+            if x.sitetype == 'Cultural':
+                culList.append([x.observation[0],y.observation[0]])
+            elif x.sitetype == 'Natural':
+                natList.append([x.observation[0],y.observation[0]])
             # plot data and label only based on site and sitetype
             labelname = x.site + ' ' + x.sitetype
             if labelname in labelList:
@@ -226,6 +339,12 @@ def plot_scatter(dsX, dsY, figname, plotmode, xlim, ylim, reg, savefig, title, l
                 title = x.site
         if dimcheck != '':
             print dimcheck + ' have more than 1 data record per point. Values have been summed'
+        if plotmode == 3.1:
+            # add ellipse equaling 2 standard deviations (95% conf interval)
+            from addellipse import plot_point_cov
+            plot_point_cov(np.array(culList), nstd=2, alpha=0.5, edgecolor='r', facecolor='none')
+            plot_point_cov(np.array(natList), nstd=2, alpha=0.5, edgecolor='g', facecolor='none')
+
 
     elif int(plotmode) == 4:
         # Scatter plot of mean per site and sitetype
@@ -269,9 +388,9 @@ def plot_scatter(dsX, dsY, figname, plotmode, xlim, ylim, reg, savefig, title, l
     else:
         text = None
     layout(figname, xlabel, ylabel, plotmode, xlim, ylim, invertY=False, text=text, savefig=savefig, title=title,
-           legend=legend, size=size)
+           legend=legend, size=size, grid=grid, textnote=textnote)
 
-def plot(inFile, site, stype, var1, var2, plotmode, xlim=None, ylim=None, reg=False, savefig=None, title=True, legend=True, size=None):
+def plot(inFile, site, stype, var1, var2, plotmode, xlim=None, ylim=None, reg=False, savefig=None, title=True, legend=True, size=None, grid=None, textnote=None):
     # check input parameters
     check_input(inFile, site, stype, var1, var2, plotmode, savefig)
 
@@ -283,7 +402,7 @@ def plot(inFile, site, stype, var1, var2, plotmode, xlim=None, ylim=None, reg=Fa
         elif int(plotmode) == 2:
             ds = getData(inFile, var1, site, stype, groupby='depth', mod=var1.mod, di=False)
             ds.data = pool_depth(ds.data)
-        plot_profile(ds, figname, plotmode, xlim, ylim, savefig, title, legend, size)
+        plot_profile(ds, figname, plotmode, xlim, ylim, savefig, title, legend, size, grid, textnote)
 
     # Scatter plots
     elif int(plotmode) >= 3:
@@ -293,4 +412,4 @@ def plot(inFile, site, stype, var1, var2, plotmode, xlim=None, ylim=None, reg=Fa
         if int(plotmode) == 4:
             dsX.data = pool_plot(dsX.data, stat=True)
             dsY.data = pool_plot(dsY.data, stat=True)
-        plot_scatter(dsX, dsY, figname, plotmode, xlim, ylim, reg, savefig, title, legend, size)
+        plot_scatter(dsX, dsY, figname, plotmode, xlim, ylim, reg, savefig, title, legend, size, grid, textnote)

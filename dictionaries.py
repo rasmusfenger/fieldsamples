@@ -29,12 +29,13 @@ siteDict = {1: 'Sandnes',
             3: 'Qoornoq',
             4: 'Ersaa',
             5: 'Kangeq',
-            6: 'all sites'}
+            6: 'all sites',
+            8: 'key sites'}
 
 # dictionary with sitetype names
 typeDict = {1: 'Natural',
             2: 'Cultural',
             3: 'both'}
 
-statModeDict = {1: 'natural_vs_cultural',
+statModeDict = {1: 'background_vs_midden',
                 2: 'site_vs_site'}

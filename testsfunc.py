@@ -1,7 +1,6 @@
 from plotfunctions import *
 
 def runtest(inFile, savefig=False):
-    site = 6
     type = 3
 
     # define output folder
@@ -18,6 +17,7 @@ def runtest(inFile, savefig=False):
     # test plotmode 1
     print 'testing plotmode 1'
     plotmode = 1
+    site = 1
     # variable 1 - soil moisture is used
     var1 = Variable(1, False, False)
     var2 = None
@@ -26,11 +26,17 @@ def runtest(inFile, savefig=False):
     ###################
     # test plotmode 2
     print 'testing plotmode 2'
+    site = 1
     # variable 1 - soil moisture is used
     var1 = Variable(1, False, False)
     var2 = None
-    for plotmode in [2, 2.1, 2.2, 2.3]:
-        plot(inFile, site, type, var1, var2, plotmode, savefig=savefig)
+    for plotmode in [2, 2.1, 2.2]:
+        size = [2.5,2.5]
+        plot(inFile, site, type, var1, var2, plotmode, savefig=savefig, size=size)
+    site = 6
+    for plotmode in [2.3, 2.4, 2.5]:
+        size = [14, 2.5]
+        plot(inFile, site, type, var1, var2, plotmode, savefig=savefig, size=size)
 
     ###################
     # test plotmode 3
@@ -39,7 +45,7 @@ def runtest(inFile, savefig=False):
     # variable 1 - NDVI, log transformed
     # variable 2 - Depth integrated P
     var1 = Variable(21, 'log', False)
-    var2 = Variable(35, False, 35)
+    var2 = Variable(34, False, 35)
     plot(inFile, site, type, var1, var2, plotmode, reg=True, savefig=savefig)
 
 
@@ -58,7 +64,7 @@ def runtest(inFile, savefig=False):
     # variable 1 - soil moisture
     # variable 2 - Depth integrated P
     var1 = Variable(1, False, 15)
-    var2 = Variable(35, False, 35)
+    var2 = Variable(39, False, 35)
     for plotmode in [4, 4.1, 4.2, 4.3]:
         plot(inFile, site, type, var1, var2, plotmode, reg=True, savefig=savefig)
 
@@ -66,6 +72,6 @@ def runtest(inFile, savefig=False):
     # variable 1 - NDVI, log transformed
     # variable 2 - Depth integrated P
     var1 = Variable(21, 'log', False)
-    var2 = Variable(35, False, 35)
+    var2 = Variable(39, False, 35)
     for plotmode in [4, 4.1, 4.2, 4.3]:
         plot(inFile, site, type, var1, var2, plotmode, reg=True, savefig=savefig)
